@@ -13,21 +13,27 @@ namespace Leap.Unity {
       Single,
       Full
     }
-
+    public GameObject StateDraw;
+        public CapsuleHand HandL;
+        public GameObject HandDraw;
+        public CapsuleHand _handL;
     [SerializeField]
     private PinchDetector _pinchDetectorA;
+    private GameObject PinchLeft;
     public PinchDetector PinchDetectorA {
       get {
         return _pinchDetectorA;
       }
       set {
+        
         _pinchDetectorA = value;
       }
     }
 
     [SerializeField]
     private PinchDetector _pinchDetectorB;
-    public PinchDetector PinchDetectorB {
+        private GameObject PinchRight;
+        public PinchDetector PinchDetectorB {
       get {
         return _pinchDetectorB;
       }
@@ -57,23 +63,56 @@ namespace Leap.Unity {
     private float _defaultNearClip;
 
     void Start() {
-//      if (_pinchDetectorA == null || _pinchDetectorB == null) {
-//        Debug.LogWarning("Both Pinch Detectors of the LeapRTS component must be assigned. This component has been disabled.");
-//        enabled = false;
-//      }
+            
 
-      GameObject pinchControl = new GameObject("RTS Anchor");
+                GameObject pinchControl = new GameObject("RTS Anchor");
       _anchor = pinchControl.transform;
       _anchor.transform.parent = transform.parent;
       transform.parent = _anchor;
     }
 
-    void Update() {
-      if (Input.GetKeyDown(_toggleGuiState)) {
+        void Awake()
+        {
+
+            StateDraw = GameObject.Find("Pinch Drawing");
+            HandDraw = GameObject.Find("CapsuleHand_L");
+
+
+        }
+
+        private void OnDestroy()
+        {
+           
+        }
+
+
+        void Update() {
+            StateDraw.SetActive(true);
+            
+
+
+            PinchLeft = GameObject.Find("HandModelsL");
+            Debug.Log(PinchLeft);
+            PinchDetectorA = PinchLeft.GetComponentInChildren<PinchDetector>(false);
+            _pinchDetectorA = PinchDetectorA;
+
+          
+
+            PinchRight = GameObject.Find("HandModelsR");
+            Debug.Log(PinchRight);
+            PinchDetectorB = PinchRight.GetComponentInChildren<PinchDetector>(false);
+            _pinchDetectorB = PinchDetectorB;
+
+            if (HandDraw != null && HandDraw.activeSelf)
+            {
+                StateDraw.SetActive(false);
+            }
+
+                if (Input.GetKeyDown(_toggleGuiState)) {
         _showGUI = !_showGUI;
       }
-
-      bool didUpdate = false;
+            
+            bool didUpdate = false;
       if(_pinchDetectorA != null)
         didUpdate |= _pinchDetectorA.DidChangeFromLastFrame;
       if(_pinchDetectorB != null)
@@ -85,32 +124,33 @@ namespace Leap.Unity {
 
       if (_pinchDetectorA != null && _pinchDetectorA.IsActive && 
           _pinchDetectorB != null &&_pinchDetectorB.IsActive) {
-        transformDoubleAnchor();
+                StateDraw.SetActive(false);
+                transformDoubleAnchor();
+                
       } else if (_pinchDetectorA != null && _pinchDetectorA.IsActive) {
-        transformSingleAnchor(_pinchDetectorA);
-      } else if (_pinchDetectorB != null && _pinchDetectorB.IsActive) {
-        transformSingleAnchor(_pinchDetectorB);
-      }
+                StateDraw.SetActive(false);
+                transformSingleAnchor(_pinchDetectorA);
+      } 
 
       if (didUpdate) {
         transform.SetParent(_anchor, true);
       }
     }
 
-    void OnGUI() {
+        void OnGUI() {
       if (_showGUI) {
-        GUILayout.Label("One Handed Settings");
+        //GUILayout.Label("One Handed Settings");
         doRotationMethodGUI(ref _oneHandedRotationMethod);
-        GUILayout.Label("Two Handed Settings");
-        doRotationMethodGUI(ref _twoHandedRotationMethod);
-        _allowScale = GUILayout.Toggle(_allowScale, "Allow Two Handed Scale");
+       /* GUILayout.Label("Two Handed Settings");*/
+        doRotationMethodGUI(ref  _twoHandedRotationMethod);
+        _allowScale = true;
       }
     }
 
     private void doRotationMethodGUI(ref RotationMethod rotationMethod) {
       GUILayout.BeginHorizontal();
 
-      GUI.color = rotationMethod == RotationMethod.None ? Color.green : Color.white;
+    /*  GUI.color = rotationMethod == RotationMethod.None ? Color.green : Color.white;
       if (GUILayout.Button("No Rotation")) {
         rotationMethod = RotationMethod.None;
       }
@@ -119,18 +159,19 @@ namespace Leap.Unity {
       if (GUILayout.Button("Single Axis")) {
         rotationMethod = RotationMethod.Single;
       }
-
+      
       GUI.color = rotationMethod == RotationMethod.Full ? Color.green : Color.white;
       if (GUILayout.Button("Full Rotation")) {
-        rotationMethod = RotationMethod.Full;
-      }
-
-      GUI.color = Color.white;
+        
+      }*/
+            rotationMethod = RotationMethod.Full;
+            //GUI.color = Color.white;
 
       GUILayout.EndHorizontal();
     }
 
     private void transformDoubleAnchor() {
+            
       _anchor.position = (_pinchDetectorA.Position + _pinchDetectorB.Position) / 2.0f;
 
       switch (_twoHandedRotationMethod) {
